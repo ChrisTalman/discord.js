@@ -1,3 +1,5 @@
+'use strict';
+
 const Structures = require('../util/Structures');
 const DataResolver = require('../util/DataResolver');
 
@@ -6,6 +8,11 @@ const DataResolver = require('../util/DataResolver');
  * @extends {User}
  */
 class ClientUser extends Structures.get('User') {
+  constructor(client, data) {
+    super(client, data);
+    this._typing = new Map();
+  }
+
   _patch(data) {
     super._patch(data);
 
@@ -14,8 +21,6 @@ class ClientUser extends Structures.get('User') {
      * @type {boolean}
      */
     this.verified = data.verified;
-
-    this._typing = new Map();
 
     /**
      * If the bot's {@link ClientApplication#owner Owner} has MFA enabled on their account
@@ -28,8 +33,8 @@ class ClientUser extends Structures.get('User') {
 
   /**
    * ClientUser's presence
-   * @readonly
    * @type {Presence}
+   * @readonly
    */
   get presence() {
     return this.client.presence;
@@ -39,7 +44,9 @@ class ClientUser extends Structures.get('User') {
     return this.client.api.users('@me').patch({ data })
       .then(newData => {
         this.client.token = newData.token;
-        return this.client.actions.UserUpdate.handle(newData).updated;
+        const { updated } = this.client.actions.UserUpdate.handle(newData);
+        if (updated) return updated;
+        return this;
       });
   }
 
@@ -76,7 +83,7 @@ class ClientUser extends Structures.get('User') {
   /**
    * Data resembling a raw Discord presence.
    * @typedef {Object} PresenceData
-   * @property {PresenceStatus} [status] Status of the user
+   * @property {PresenceStatusData} [status] Status of the user
    * @property {boolean} [afk] Whether the user is AFK
    * @property {Object} [activity] Activity the user is playing
    * @property {Object|string} [activity.application] An application object or application id
@@ -84,6 +91,7 @@ class ClientUser extends Structures.get('User') {
    * @property {string} [activity.name] Name of the activity
    * @property {ActivityType|number} [activity.type] Type of the activity
    * @property {string} [activity.url] Stream url
+   * @property {?number|number[]} [shardID] Shard Id(s) to have the activity set on
    */
 
   /**
@@ -97,7 +105,7 @@ class ClientUser extends Structures.get('User') {
    *   .catch(console.error);
    */
   setPresence(data) {
-    return this.client.presence.setClientPresence(data);
+    return this.client.presence.set(data);
   }
 
   /**
@@ -106,12 +114,13 @@ class ClientUser extends Structures.get('User') {
    * * `idle`
    * * `invisible`
    * * `dnd` (do not disturb)
-   * @typedef {string} PresenceStatus
+   * @typedef {string} PresenceStatusData
    */
 
   /**
    * Sets the status of the client user.
-   * @param {PresenceStatus} status Status to change to
+   * @param {PresenceStatusData} status Status to change to
+   * @param {?number|number[]} [shardID] Shard ID(s) to have the activity set on
    * @returns {Promise<Presence>}
    * @example
    * // Set the client user's status
@@ -119,28 +128,35 @@ class ClientUser extends Structures.get('User') {
    *   .then(console.log)
    *   .catch(console.error);
    */
-  setStatus(status) {
-    return this.setPresence({ status });
+  setStatus(status, shardID) {
+    return this.setPresence({ status, shardID });
   }
 
   /**
+   * Options for setting an activity
+   * @typedef ActivityOptions
+   * @type {Object}
+   * @property {string} [url] Twitch stream URL
+   * @property {ActivityType|number} [type] Type of the activity
+   * @property {?number|number[]} [shardID] Shard Id(s) to have the activity set on
+   */
+
+  /**
    * Sets the activity the client user is playing.
-   * @param {?string} name Activity being played
-   * @param {Object} [options] Options for setting the activity
-   * @param {string} [options.url] Twitch stream URL
-   * @param {ActivityType|number} [options.type] Type of the activity
+   * @param {string|ActivityOptions} [name] Activity being played, or options for setting the activity
+   * @param {ActivityOptions} [options] Options for setting the activity
    * @returns {Promise<Presence>}
    * @example
    * // Set the client user's activity
    * client.user.setActivity('discord.js', { type: 'WATCHING' })
-   *   .then(presence => console.log(`Activity set to ${presence.game.name}`))
+   *   .then(presence => console.log(`Activity set to ${presence.activity.name}`))
    *   .catch(console.error);
    */
-  setActivity(name, { url, type } = {}) {
-    if (!name) return this.setPresence({ activity: null });
-    return this.setPresence({
-      activity: { name, type, url },
-    });
+  setActivity(name, options = {}) {
+    if (!name) return this.setPresence({ activity: null, shardID: options.shardID });
+
+    const activity = Object.assign({}, options, typeof name === 'object' ? name : { name });
+    return this.setPresence({ activity, shardID: activity.shardID });
   }
 
   /**
@@ -150,42 +166,6 @@ class ClientUser extends Structures.get('User') {
    */
   setAFK(afk) {
     return this.setPresence({ afk });
-  }
-
-  /**
-   * An object containing either a user or access token, and an optional nickname.
-   * @typedef {Object} GroupDMRecipientOptions
-   * @property {UserResolvable} [user] User to add to the Group DM
-   * @property {string} [accessToken] Access token to use to add a user to the Group DM
-   * (only available if a bot is creating the DM)
-   * @property {string} [nick] Permanent nickname (only available if a bot is creating the DM)
-   * @property {string} [id] If no user resolvable is provided and you want to assign nicknames
-   * you must provide user ids instead
-   */
-
-  /**
-   * Creates a Group DM.
-   * @param {GroupDMRecipientOptions[]} recipients The recipients
-   * @returns {Promise<GroupDMChannel>}
-   * @example
-   * // Create a Group DM with a token provided from OAuth
-   * client.user.createGroupDM([{
-   *   user: '66564597481480192',
-   *   accessToken: token
-   * }])
-   *   .then(console.log)
-   *   .catch(console.error);
-   */
-  createGroupDM(recipients) {
-    const data = this.bot ? {
-      access_tokens: recipients.map(u => u.accessToken),
-      nicks: recipients.reduce((o, r) => {
-        if (r.nick) o[r.user ? r.user.id : r.id] = r.nick;
-        return o;
-      }, {}),
-    } : { recipients: recipients.map(u => this.client.users.resolveID(u.user || u.id)) };
-    return this.client.api.users('@me').channels.post({ data })
-      .then(res => this.client.channels.add(res));
   }
 }
 

@@ -1,6 +1,21 @@
 language: node_js
 node_js:
+<<<<<<< HEAD
   - stable
+=======
+  - 10
+  - 11
+install: npm install
+script: bash ./travis/test.sh
+jobs:
+  include:
+    - stage: deploy
+      node_js: 10
+      script: bash ./travis/deploy.sh
+      env:
+        - ENCRYPTION_LABEL="af862fa96d3e"
+        - COMMIT_AUTHOR_EMAIL="amishshah.2k@gmail.com"
+>>>>>>> upstream/master
 cache:
   directories:
     - node_modules
