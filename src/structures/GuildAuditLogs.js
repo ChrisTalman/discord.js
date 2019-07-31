@@ -294,7 +294,7 @@ class GuildAuditLogsEntry {
       } else if (data.action_type === Actions.MESSAGE_DELETE) {
         this.extra = {
           count: data.options.count,
-          channel: guild.channels.get(data.options.channel_id),
+          channel: guild.channels.get(data.options.channel_id) || { id: data.options.channel_id },
         };
       } else {
         switch (data.options.type) {
