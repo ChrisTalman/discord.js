@@ -597,6 +597,220 @@ declare module 'discord.js' {
 		public reason: string;
 		public target: Guild | User | Role | Emoji | Invite | Webhook;
 		public targetType: GuildAuditLogsTarget;
+		public data: GuildAuditLogsEntryData;
+	}
+
+	// Guild Audit Log Entry: Base
+	export type GuildAuditLogsEntryData =
+		GuildAuditLogsEntryDataGuild |
+		GuildAuditLogsEntryDataChannel |
+		GuildAuditLogsEntryDataMessageDelete |
+		GuildAuditLogsEntryDataMessageBulkDelete |
+		GuildAuditLogsEntryDataMessagePin |
+		GuildAuditLogsEntryDataMessageUnpin |
+		GuildAuditLogsEntryDataMemberKick |
+		GuildAuditLogsEntryDataMemberBan |
+		GuildAuditLogsEntryDataMemberUnban |
+		GuildAuditLogsEntryDataMemberMove |
+		GuildAuditLogsEntryDataMemberDisconnect |
+		GuildAuditLogsEntryDataMemberUpdate |
+		GuildAuditLogsEntryDataMemberRoleUpdate |
+		GuildAuditLogsEntryDataMemberPrune |
+		GuildAuditLogsEntryDataBotAdd |
+		GuildAuditLogsEntryDataRole |
+		GuildAuditLogsEntryDataChannelOverwrite |
+		GuildAuditLogsEntryDataInvite |
+		GuildAuditLogsEntryDataWebhook |
+		GuildAuditLogsEntryDataEmoji |
+		GuildAuditLogsEntryDataIntegration
+	;
+	export interface GuildAuditLogsEntryBaseData
+	{
+		id: string;
+		user_id: string;
+		action_type: GuildAuditLogsActions[keyof GuildAuditLogsActions];
+		reason?: string;
+	}
+	export interface GuildAuditLogsEntryDataChanges extends Array<GuildAuditLogsEntryDataChange> {}
+	export interface GuildAuditLogsEntryDataChange
+	{
+		key: string;
+		new_value?: any;
+		old_value: any;
+	}
+	// Guild Audit Log Entry: Guild
+	export interface GuildAuditLogsEntryDataGuild
+	{
+		action_type: GuildAuditLogsActions['GUILD_UPDATE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	// Guild Audit Log Entry: Channel
+	export interface GuildAuditLogsEntryDataChannel
+	{
+		action_type: GuildAuditLogsActions['CHANNEL_CREATE'] | GuildAuditLogsActions['CHANNEL_UPDATE'] | GuildAuditLogsActions['CHANNEL_DELETE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	// Guild Audit Log Entry: Message Delete
+	export interface GuildAuditLogsEntryDataMessageDelete extends GuildAuditLogsEntryBaseData
+	{
+		action_type: GuildAuditLogsActions['MESSAGE_DELETE'];
+		target_id: string;
+		options:
+		{
+			channel_id: string;
+			count: string;
+		};
+	}
+	// Guild Audit Log Entry: Message Bulk Delete
+	export interface GuildAuditLogsEntryDataMessageBulkDelete extends GuildAuditLogsEntryBaseData
+	{
+		action_type: GuildAuditLogsActions['MESSAGE_BULK_DELETE'];
+	}
+	// Guild Audit Log Entry: Message Pin
+	export interface GuildAuditLogsEntryDataMessagePin extends GuildAuditLogsEntryBaseData
+	{
+		type: GuildAuditLogsActions['MESSAGE_PIN'];
+		target_id: string;
+		options:
+		{
+			channel_id: string;
+			message_id: string;
+		};
+	}
+	// Guild Audit Log Entry: Message Unpin
+	export interface GuildAuditLogsEntryDataMessageUnpin extends GuildAuditLogsEntryBaseData
+	{
+		type: GuildAuditLogsActions['MESSAGE_UNPIN'];
+		target_id: string;
+		options:
+		{
+			channel_id: string;
+			message_id: string;
+		};
+	}
+	// Guild Audit Log Entry: Member Kick
+	export interface GuildAuditLogsEntryDataMemberKick extends GuildAuditLogsEntryBaseData
+	{
+		type: GuildAuditLogsActions['MEMBER_KICK'];
+	}
+	// Guild Audit Log Entry: Member Ban
+	export interface GuildAuditLogsEntryDataMemberBan extends GuildAuditLogsEntryBaseData
+	{
+		type: GuildAuditLogsActions['MEMBER_BAN_ADD'];
+		target_id: string;
+	}
+	// Guild Audit Log Entry: Member Unban
+	export interface GuildAuditLogsEntryDataMemberUnban extends GuildAuditLogsEntryBaseData
+	{
+		type: GuildAuditLogsActions['MEMBER_BAN_REMOVE'];
+		target_id: string;
+	}
+	// Guild Audit Log Entry: Member Move
+	export interface GuildAuditLogsEntryDataMemberMove extends GuildAuditLogsEntryBaseData
+	{
+		action_type: GuildAuditLogsActions['MEMBER_MOVE'];
+		target_id: string;
+		options:
+		{
+			channel_id: string;
+			count: string;
+		};
+	}
+	// Guild Audit Log Entry: Member Disconnect
+	export interface GuildAuditLogsEntryDataMemberDisconnect extends GuildAuditLogsEntryBaseData
+	{
+		action_type: GuildAuditLogsActions['MEMBER_DISCONNECT'];
+		target_id: string;
+		options:
+		{
+			count: string;
+		};
+	}
+	// Guild Audit Log Entry: Member Update
+	export interface GuildAuditLogsEntryDataMemberUpdate extends GuildAuditLogsEntryBaseData
+	{
+		action_type: GuildAuditLogsActions['MEMBER_UPDATE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	// Guild Audit Log Entry: Member Role Update
+	export interface GuildAuditLogsEntryDataMemberRoleUpdate extends GuildAuditLogsEntryBaseData
+	{
+		action_type: GuildAuditLogsActions['MEMBER_ROLE_UPDATE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	// Guild Audit Log Entry: Member Prune
+	export interface GuildAuditLogsEntryDataMemberPrune extends GuildAuditLogsEntryBaseData
+	{
+		action_type: GuildAuditLogsActions['MEMBER_PRUNE'];
+		options:
+		{
+			delete_member_days: string;
+			members_removed: string;
+		};
+	}
+	// Guild Audit Log Entry: Bot Add
+	export interface GuildAuditLogsEntryDataBotAdd extends GuildAuditLogsEntryBaseData
+	{
+		action_type: GuildAuditLogsActions['BOT_ADD'];
+	}
+	// Guild Audit Log Entry: Role
+	export interface GuildAuditLogsEntryDataRole
+	{
+		action_type: GuildAuditLogsActions['ROLE_CREATE'] | GuildAuditLogsActions['ROLE_UPDATE'] | GuildAuditLogsActions['ROLE_DELETE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	// Guild Audit Log Entry: Channel Overwrite
+	export interface GuildAuditLogsEntryDataChannelOverwrite
+	{
+		action_type: GuildAuditLogsActions['CHANNEL_OVERWRITE_CREATE'] | GuildAuditLogsActions['CHANNEL_OVERWRITE_UPDATE'] | GuildAuditLogsActions['CHANNEL_OVERWRITE_DELETE'];
+		target_id: string;
+		options: GuildAuditLogsEntryDataChannelOverwriteOptions;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	export type GuildAuditLogsEntryDataChannelOverwriteOptions = GuildAuditLogsEntryDataChannelOverwriteOptionsMember | GuildAuditLogsEntryDataChannelOverwriteOptionsRole;
+	export interface GuildAuditLogsEntryDataChannelOverwriteOptionsMember
+	{
+		id: string;
+		type: 'member';
+	}
+	export interface GuildAuditLogsEntryDataChannelOverwriteOptionsRole
+	{
+		id: string;
+		type: 'role';
+		roleName: string;
+	}
+	// Guild Audit Log Entry: Invite
+	export interface GuildAuditLogsEntryDataInvite
+	{
+		action_type: GuildAuditLogsActions['INVITE_CREATE'] | GuildAuditLogsActions['INVITE_UPDATE'] | GuildAuditLogsActions['INVITE_DELETE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	// Guild Audit Log Entry: Webhook
+	export interface GuildAuditLogsEntryDataWebhook
+	{
+		action_type: GuildAuditLogsActions['WEBHOOK_CREATE'] | GuildAuditLogsActions['WEBHOOK_UPDATE'] | GuildAuditLogsActions['WEBHOOK_DELETE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	// Guild Audit Log Entry: Emoji
+	export interface GuildAuditLogsEntryDataEmoji
+	{
+		action_type: GuildAuditLogsActions['EMOJI_CREATE'] | GuildAuditLogsActions['EMOJI_UPDATE'] | GuildAuditLogsActions['EMOJI_DELETE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
+	}
+	// Guild Audit Log Entry: Integration
+	export interface GuildAuditLogsEntryDataIntegration
+	{
+		action_type: GuildAuditLogsActions['INTEGRATION_CREATE'] | GuildAuditLogsActions['INTEGRATION_UPDATE'] | GuildAuditLogsActions['INTEGRATION_DELETE'];
+		target_id: string;
+		changes: GuildAuditLogsEntryDataChanges;
 	}
 
 	export class GuildChannel extends Channel {

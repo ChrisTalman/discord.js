@@ -248,6 +248,7 @@ class GuildAuditLogs {
  */
 class GuildAuditLogsEntry {
   constructor(logs, guild, data) {
+    this.data = data;
     const targetType = GuildAuditLogs.targetType(data.action_type);
     /**
      * The target type of this entry
